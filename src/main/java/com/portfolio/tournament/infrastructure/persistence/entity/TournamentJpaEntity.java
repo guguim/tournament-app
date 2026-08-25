@@ -1,18 +1,11 @@
 package com.portfolio.tournament.infrastructure.persistence.entity;
 
 import com.portfolio.tournament.domain.model.TournamentStatus;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-/**
- * JPA Entity - Fica na Infraestrutura.
- * O único propósito desta classe é mapear colunas do banco relacional.
- * Sem regras de negócio aqui!
- */
 @Entity
 @Table(name = "tournaments")
 public class TournamentJpaEntity {
@@ -25,7 +18,11 @@ public class TournamentJpaEntity {
     @Enumerated(EnumType.STRING)
     private TournamentStatus status;
 
-    // Construtor sem argumentos obrigatório para o framework JPA/Hibernate
+    // A MÁGICA AQUI: Um torneio tem VÁRIOS competidores
+    // CascadeType.ALL = Ao salvar o Torneio, salve os competidores também!
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CompetitorJpaEntity> participants = new ArrayList<>();
+
     protected TournamentJpaEntity() {}
 
     public TournamentJpaEntity(UUID id, String name, TournamentStatus status) {
@@ -37,4 +34,5 @@ public class TournamentJpaEntity {
     public UUID getId() { return id; }
     public String getName() { return name; }
     public TournamentStatus getStatus() { return status; }
+    public List<CompetitorJpaEntity> getParticipants() { return participants; }
 }
