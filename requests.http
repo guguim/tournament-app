@@ -1,0 +1,39 @@
+### 1. Criar um novo torneio
+POST http://localhost:8080/api/v1/tournaments
+Content-Type: application/json
+
+{
+  "name": "Mortal Kombat Championship 2026"
+}
+
+
+### 2. Cadastrar Participante 1 (Substitua SEU-ID-AQUI pelo ID gerado acima)
+POST http://localhost:8080/api/v1/tournaments/SEU-ID-AQUI/participants
+Content-Type: application/json
+
+{
+  "competitorName": "Scorpion"
+}
+
+
+### 3. Cadastrar Participante 2 (Substitua SEU-ID-AQUI pelo ID gerado acima)
+POST http://localhost:8080/api/v1/tournaments/SEU-ID-AQUI/participants
+Content-Type: application/json
+
+{
+  "competitorName": "Sub-Zero"
+}
+
+
+### 4. Iniciar o Torneio (Substitua SEU-ID-AQUI pelo ID gerado acima)
+POST http://localhost:8080/api/v1/tournaments/SEU-ID-AQUI/start
+
+
+### 5. BÔNUS: Testar o Tratamento de Erros (RFC 7807) 
+# Enviar nome vazio para ver o Bean Validation bloqueando a requisição!
+POST http://localhost:8080/api/v1/tournaments
+Content-Type: application/json
+
+{
+  "name": ""
+}

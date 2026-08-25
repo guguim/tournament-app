@@ -1,17 +1,18 @@
 package com.portfolio.tournament.infrastructure.persistence.adapter;
 
+import com.portfolio.tournament.domain.model.Competitor;
+import com.portfolio.tournament.domain.model.Rating;
 import com.portfolio.tournament.domain.model.Tournament;
 import com.portfolio.tournament.domain.repository.TournamentRepository;
+import com.portfolio.tournament.infrastructure.persistence.entity.CompetitorJpaEntity;
 import com.portfolio.tournament.infrastructure.persistence.entity.TournamentJpaEntity;
 import com.portfolio.tournament.infrastructure.persistence.repository.SpringDataTournamentRepository;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-/**
- * ADAPTADOR (Adapter) - Implementa a Porta do Domínio.
- * Essa classe faz a "tradução" entre o mundo puro (Domínio) e o mundo do Banco de Dados (JPA).
- */
 @Repository
 public class TournamentRepositoryAdapter implements TournamentRepository {
 
@@ -23,25 +24,38 @@ public class TournamentRepositoryAdapter implements TournamentRepository {
 
     @Override
     public void save(Tournament tournament) {
-        // 1. Mapeamento de Domínio Puro -> JPA Entity
         TournamentJpaEntity jpaEntity = new TournamentJpaEntity(
             tournament.getId(),
             tournament.getName(),
             tournament.getStatus()
         );
         
-        // 2. Salva usando o Spring Data
+        // MAPEAMENTO DOS FILHOS: Copiamos da Entidade Pura para a Entidade do Banco
+        List<CompetitorJpaEntity> jpaCompetitors = tournament.getParticipants().stream()
+            .map(c -> new CompetitorJpaEntity(
+                c.getId(), 
+                c.getName(), 
+                c.getRating().value(), 
+                jpaEntity))
+            .collect(Collectors.toList());
+            
+        jpaEntity.getParticipants().addAll(jpaCompetitors);
+        
         springRepository.save(jpaEntity);
     }
 
     @Override
     public Optional<Tournament> findById(UUID id) {
-        // 1. Busca usando o Spring Data
         return springRepository.findById(id)
             .map(jpa -> {
-                // 2. Mapeamento Reverso: JPA Entity -> Domínio Puro
                 Tournament domainTournament = new Tournament(jpa.getId(), jpa.getName());
-                // (Nota didática: em um cenário completo, faríamos o mapeamento de todos os atributos, rounds, etc)
+                
+                // MAPEAMENTO REVERSO: Copiamos da Entidade do Banco de volta para a Pura
+                for (CompetitorJpaEntity cJpa : jpa.getParticipants()) {
+                    Competitor competitor = new Competitor(cJpa.getId(), cJpa.getName(), new Rating(cJpa.getRating()));
+                    domainTournament.addParticipant(competitor);
+                }
+                
                 return domainTournament;
             });
     }
