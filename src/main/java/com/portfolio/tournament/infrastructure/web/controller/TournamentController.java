@@ -1,37 +1,53 @@
 package com.portfolio.tournament.infrastructure.web.controller;
 
+import com.portfolio.tournament.application.usecase.AddParticipantUseCase;
+import com.portfolio.tournament.application.usecase.CreateTournamentUseCase;
 import com.portfolio.tournament.application.usecase.StartTournamentUseCase;
+import com.portfolio.tournament.domain.model.Tournament;
+import com.portfolio.tournament.infrastructure.web.dto.AddParticipantRequest;
+import com.portfolio.tournament.infrastructure.web.dto.CreateTournamentRequest;
+import com.portfolio.tournament.infrastructure.web.dto.TournamentResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
-/**
- * Adaptador de Entrada (Primary Adapter).
- * Recebe as requisições da web (HTTP/REST) e traduz para a linguagem do Domínio (através do Use Case).
- */
 @RestController
 @RequestMapping("/api/v1/tournaments")
 public class TournamentController {
 
+    private final CreateTournamentUseCase createTournamentUseCase;
+    private final AddParticipantUseCase addParticipantUseCase;
     private final StartTournamentUseCase startTournamentUseCase;
 
-    // O Spring se encarrega de injetar o Use Case aqui
-    public TournamentController(StartTournamentUseCase startTournamentUseCase) {
+    public TournamentController(
+            CreateTournamentUseCase createTournamentUseCase,
+            AddParticipantUseCase addParticipantUseCase,
+            StartTournamentUseCase startTournamentUseCase) {
+        this.createTournamentUseCase = createTournamentUseCase;
+        this.addParticipantUseCase = addParticipantUseCase;
         this.startTournamentUseCase = startTournamentUseCase;
     }
 
-    /**
-     * Endpoint para iniciar um torneio.
-     * Exemplo de chamada: POST /api/v1/tournaments/123e4567-e89b-12d3-a456-426614174000/start
-     */
+    @PostMapping
+    public ResponseEntity<TournamentResponse> createTournament(@Valid @RequestBody CreateTournamentRequest request) {
+        Tournament tournament = createTournamentUseCase.execute(request.name());
+        return ResponseEntity.status(HttpStatus.CREATED).body(TournamentResponse.fromDomain(tournament));
+    }
+
+    @PostMapping("/{id}/participants")
+    public ResponseEntity<Void> addParticipant(
+            @PathVariable UUID id,
+            @Valid @RequestBody AddParticipantRequest request) {
+        
+        addParticipantUseCase.execute(id, request.competitorName());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
     @PostMapping("/{id}/start")
     public ResponseEntity<Void> startTournament(@PathVariable UUID id) {
-        
-        // Repare que o Controller é "burro". Ele não faz cálculos,
-        // não usa if/else para regras de negócio. Ele apenas delega!
         startTournamentUseCase.execute(id);
-        
-        // Retorna status 204 (No Content) indicando sucesso sem corpo na resposta.
         return ResponseEntity.noContent().build();
     }
 }
