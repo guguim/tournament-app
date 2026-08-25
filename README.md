@@ -80,8 +80,8 @@ A atualização do rating de dois competidores $A$ e $B$ segue a fórmula matem�
 
 ### 1. Clonar o repositório
 ```bash
-git clone https://github.com/seu-usuario/tournament-engine.git
-cd tournament-engine
+git clone https://github.com/seu-usuario/tournament-app.git
+cd tournament-app
 ```
 
 ### 2. Subir o ambiente com Docker
